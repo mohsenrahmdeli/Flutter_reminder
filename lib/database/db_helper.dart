@@ -15,7 +15,7 @@ id INTEGER PRIMARY KEY AUTOINCREMENT,
 title TEXT,
 description TEXT,
 isActive INTEGER,
-remindersTime TEXT,
+reminderTime TEXT,
 category TEXT
       )
 ''');
