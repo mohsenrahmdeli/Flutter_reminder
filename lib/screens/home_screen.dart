@@ -111,7 +111,35 @@ class _HomeScreenState extends State<HomeScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15),
                       ),
-                      child: ListTile(),
+                      child: ListTile(
+                        onTap: (){
+                          // Navigator.push(context, 
+                          // MaterialPageRoute(builder: (context)=> ReminderDetailScreen()));
+                        },
+                        leading: Icon(
+                          Icons.notifications,
+                          color: Colors.teal,
+                        ),
+                        title: Text(
+                          reminder['title'],
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: Colors.black,
+                          ),
+                        ),
+                        subtitle: Text(
+                          'category: ${reminder['category']}',
+                        ),
+                        trailing: Switch(
+                            value: reminder['isActive'] == 1,
+                            activeColor: Colors.teal,
+                            inactiveTrackColor: Colors.white,
+                            inactiveThumbColor: Colors.black,
+                            onChanged: (value) {
+                              _toggleReminder(reminder['id'], value);
+                            },),
+                      ),
                     ),
                   );
                 },
