@@ -83,13 +83,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: EdgeInsets.only(right: 20),
                       alignment: Alignment.centerRight,
                       child: Icon(
-                      Icons.delete,
-                      color: Colors.white,
-                      size: 30,
+                        Icons.delete,
+                        color: Colors.white,
+                        size: 30,
+                      ),
                     ),
-                    ),
-                    
-                    confirmDismiss: (direction) async {},
+                    confirmDismiss: (direction) async {
+                      return await _showDeleeConfirmationDialog(context);
+                    },
                     onDismissed: (direction) {
                       _deleteReminder(reminder['id']);
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -101,9 +102,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                     child: Card(
-                      color:Colors.teal.shade50,
+                      color: Colors.teal.shade50,
                       elevation: 6,
-                      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16,),
+                      margin: EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 16,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15),
                       ),
@@ -121,4 +125,36 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+}
+
+Future<bool?> _showDeleeConfirmationDialog(BuildContext context) {
+  return showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: Colors.white,
+        title: Text('Delete Reminder'),
+        content: Text('Are you sure you want to delete this reminder?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(false);
+            },
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(true);
+            },
+            child: Text(
+              'Delete',
+              style: TextStyle(
+                color: Colors.redAccent,
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+  );
 }
