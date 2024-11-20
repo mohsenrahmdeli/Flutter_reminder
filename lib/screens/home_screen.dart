@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../database/db_helper.dart';
 import '../services/notification_helper.dart';
+import 'add_edit_reminder.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,7 +16,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _loadReminders();
   }
@@ -89,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     confirmDismiss: (direction) async {
-                      return await _showDeleeConfirmationDialog(context);
+                      return await _showDeleteConfirmationDialog(context);
                     },
                     onDismissed: (direction) {
                       _deleteReminder(reminder['id']);
@@ -117,7 +117,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
         floatingActionButton: FloatingActionButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => AddEditReminder()));
+          },
           backgroundColor: Colors.teal,
           foregroundColor: Colors.white,
           child: Icon(Icons.add),
@@ -127,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-Future<bool?> _showDeleeConfirmationDialog(BuildContext context) {
+Future<bool?> _showDeleteConfirmationDialog(BuildContext context) {
   return showDialog<bool>(
     context: context,
     builder: (BuildContext context) {
