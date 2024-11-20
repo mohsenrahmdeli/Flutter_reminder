@@ -61,6 +61,57 @@ class _HomeScreenState extends State<HomeScreen> {
             color: Colors.teal,
           ),
         ),
+        body: _reminders.isEmpty
+            ? Center(
+                child: Text(
+                  "No reminder Found",
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.teal,
+                  ),
+                ),
+              )
+            : ListView.builder(
+                itemCount: _reminders.length,
+                itemBuilder: (context, index) {
+                  final reminder = _reminders[index];
+                  return Dismissible(
+                    key: Key(reminder['id'].toString()),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      color: Colors.redAccent,
+                      padding: EdgeInsets.only(right: 20),
+                      alignment: Alignment.centerRight,
+                      child: Icon(
+                      Icons.delete,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                    ),
+                    
+                    confirmDismiss: (direction) async {},
+                    onDismissed: (direction) {
+                      _deleteReminder(reminder['id']);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Reminder Delered',
+                          ),
+                        ),
+                      );
+                    },
+                    child: Card(
+                      color:Colors.teal.shade50,
+                      elevation: 6,
+                      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16,),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: ListTile(),
+                    ),
+                  );
+                },
+              ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {},
           backgroundColor: Colors.teal,
