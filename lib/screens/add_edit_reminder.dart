@@ -125,18 +125,48 @@ class _AddEditReminderState extends State<AddEditReminder> {
                     },
                   ),
                 ),
-                SizedBox(height: 20,),
+                SizedBox(
+                  height: 20,
+                ),
                 _buildDateTimePicker(
-                  label: 'Date', 
-                  icon: Icons.calendar_today, 
-                  displayValue: DateFormat('yyy-MM-dd').format(_reminderTime), 
-                  onPressed: _selectDate),
-                  SizedBox(height: 10,),
+                  label: 'Date',
+                  icon: Icons.calendar_today,
+                  displayValue: DateFormat('yyy-MM-dd').format(_reminderTime),
+                  onPressed: _selectDate,
+                ),
+                SizedBox(
+                  height: 10,
+                ),
                 _buildDateTimePicker(
-                  label: 'Time', 
-                  icon: Icons.access_time, 
-                  displayValue: DateFormat('hh:mm a').format(_reminderTime), 
-                  onPressed: _selectTime),
+                  label: 'Time',
+                  icon: Icons.access_time,
+                  displayValue: DateFormat('hh:mm a').format(_reminderTime),
+                  onPressed: _selectTime,
+                ),
+                SizedBox(
+                  height: 30,
+                ),
+                Center(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                        vertical: 15,
+                        horizontal: 20,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      textStyle: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      backgroundColor: Colors.teal,
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: _saveReminder,
+                    child: Text('Save Reminder'),
+                  ),
+                ),
               ],
             ),
           ),
