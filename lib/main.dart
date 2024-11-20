@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import '../database/db_helper.dart';
 
 import 'screens/home_screen.dart';
+import 'services/notification_helper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await DbHelper.initDb();
+  await NotificationHelper.initializeNotifications();
   runApp(const MyApp());
 }
 
@@ -15,7 +19,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Reminder App',
-      theme:ThemeData(
+      theme: ThemeData(
         primarySwatch: Colors.teal,
         fontFamily: 'Montserrat',
         textTheme: TextTheme(
