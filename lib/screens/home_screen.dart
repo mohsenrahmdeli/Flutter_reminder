@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../database/db_helper.dart';
+import '../helper/helper.dart';
 import '../services/notification_helper.dart';
 import '../services/permission_handler.dart';
 import 'add_edit_reminder.dart';
@@ -25,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadReminders() async {
     try {
-      final reminders = await DbHelper.getReminders();
+      final reminders = await SharedPreferencesHelper.getReminders();
       setState(() {
         _reminders = reminders ?? [];
       });
@@ -38,13 +37,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _toggleReminder(int id, bool isActive) async {
-    await DbHelper.toggleReminder(id, isActive);
-    setState(() {
-    final index = _reminders.indexWhere((rem) => rem['id'] == id);
-    if (index != -1) {
-      _reminders[index]['isActive'] = isActive ? 1 : 0; 
+    final reminders = await SharedPreferencesHelper.getReminders();
+    if (reminders != null) {
+      final index = reminders.indexWhere((rem) => rem['id'] == id);
+      if (index != -1) {
+        reminders[index]['isActive'] = isActive ? 1 : 0;
+        await SharedPreferencesHelper.saveReminders(reminders);
+        setState(() {
+          _reminders = reminders;
+        });
+      }
     }
-  });
+
     if (isActive) {
       try {
         final reminder = _reminders.firstWhere((rem) => rem['id'] == id);
@@ -67,9 +71,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _deleteReminder(int id) async {
-    await DbHelper.deleteReminder(id);
+    final reminders = await SharedPreferencesHelper.getReminders();
+    if (reminders != null) {
+      reminders.removeWhere((rem) => rem['id'] == id);
+      await SharedPreferencesHelper.saveReminders(reminders);
+      setState(() {
+        _reminders = reminders;
+      });
+    }
     NotificationHelper.cancelNotification(id);
-    _loadReminders();
   }
 
   @override
@@ -187,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           'category: ${reminder['category']}',
                         ),
                         trailing: Switch(
-                          value: reminder['isActive'] == 1,
+                          value: reminder['isActive'] == 1, // بررسی مقدار عددی
                           activeColor: Colors.teal,
                           inactiveTrackColor: Colors.white,
                           inactiveThumbColor: Colors.black,
