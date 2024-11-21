@@ -1,7 +1,7 @@
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:reminder_app/database/db_helper.dart';
-
 import '../services/notification_helper.dart';
 import 'home_screen.dart';
 
@@ -31,15 +31,24 @@ class _AddEditReminderState extends State<AddEditReminder> {
   }
 
   Future<void> fetchReminder() async {
-    try {
-      final data = await DbHelper.getReminderById(widget.reminderId!);
-      if (data != null) {
-        _titleController.text = data['title'];
-        _descriptionController.text = data['description'];
-        _category = data['category'];
-        _reminderTime = DateTime.parse(data['reminderTime']);
+    final prefs = await SharedPreferences.getInstance();
+    final reminders = prefs.getString('reminders');
+    if (reminders != null) {
+      final remindersList = jsonDecode(reminders) as List;
+      final reminder = remindersList.firstWhere(
+        (r) => r['id'] == widget.reminderId,
+        orElse: () => null,
+      ) as Map<String, dynamic>?;
+
+      if (reminder != null) {
+        setState(() {
+          _titleController.text = reminder['title'];
+          _descriptionController.text = reminder['description'];
+          _category = reminder['category'];
+          _reminderTime = DateTime.parse(reminder['reminderTime']);
+        });
       }
-    } catch (e) {}
+    }
   }
 
   @override
@@ -295,22 +304,39 @@ class _AddEditReminderState extends State<AddEditReminder> {
 
   Future<void> _saveReminder() async {
     if (_formKey.currentState!.validate()) {
+      final prefs = await SharedPreferences.getInstance();
+      final reminders = prefs.getString('reminders');
+      List remindersList = reminders != null ? jsonDecode(reminders) : [];
+
       final newReminder = {
+        'id': widget.reminderId ??
+            (DateTime.now().millisecondsSinceEpoch % 2147483647),
         'title': _titleController.text,
         'description': _descriptionController.text,
         'isActive': 1,
         'reminderTime': _reminderTime.toIso8601String(),
         'category': _category,
       };
+
       if (widget.reminderId == null) {
-        final reminderId = await DbHelper.addReminder(newReminder);
-        NotificationHelper.scheduleNotificaton(
-            reminderId, _titleController.text, _category, _reminderTime);
+        remindersList.add(newReminder);
       } else {
-        await DbHelper.updateReminder(widget.reminderId!, newReminder);
-        NotificationHelper.scheduleNotificaton(widget.reminderId!,
-            _titleController.text, _category, _reminderTime);
+        remindersList = remindersList.map((reminder) {
+          if (reminder['id'] == widget.reminderId) {
+            return newReminder;
+          }
+          return reminder;
+        }).toList();
       }
+
+      await prefs.setString('reminders', jsonEncode(remindersList));
+      NotificationHelper.scheduleNotificaton(
+        newReminder['id'] as int, // تبدیل به نوع int
+        _titleController.text,
+        _category,
+        _reminderTime,
+      );
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
