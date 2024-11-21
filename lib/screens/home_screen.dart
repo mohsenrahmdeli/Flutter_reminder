@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../database/db_helper.dart';
 import '../services/notification_helper.dart';
+import '../services/permission_handler.dart';
 import 'add_edit_reminder.dart';
+import 'reminder_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,24 +19,50 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    requestNotificationPermissions();
     _loadReminders();
   }
 
   Future<void> _loadReminders() async {
-    final reminders = await DbHelper.getReminders();
-    setState(() {
-      _reminders = reminders;
-    });
+    try {
+      final reminders = await DbHelper.getReminders();
+      setState(() {
+        _reminders = reminders ?? [];
+      });
+    } catch (e) {
+      print('Error loading reminders: $e');
+      setState(() {
+        _reminders = [];
+      });
+    }
   }
 
   Future<void> _toggleReminder(int id, bool isActive) async {
     await DbHelper.toggleReminder(id, isActive);
+    setState(() {
+    final index = _reminders.indexWhere((rem) => rem['id'] == id);
+    if (index != -1) {
+      _reminders[index]['isActive'] = isActive ? 1 : 0; 
+    }
+  });
     if (isActive) {
-      final reminder = _reminders.firstWhere((rem) => rem['id'] == id);
-      NotificationHelper.scheduleNotificaton(id, reminder['title'],
-          reminder['category'], DateTime.parse(reminder['reminderTime']));
+      try {
+        final reminder = _reminders.firstWhere((rem) => rem['id'] == id);
+        NotificationHelper.scheduleNotificaton(
+          id,
+          reminder['title'],
+          reminder['category'],
+          DateTime.parse(reminder['reminderTime']),
+        );
+      } catch (e) {
+        print('Error scheduling notification: $e');
+      }
     } else {
-      NotificationHelper.cancelNotification(id);
+      try {
+        NotificationHelper.cancelNotification(id);
+      } catch (e) {
+        print('Error canceling notification: $e');
+      }
     }
   }
 
@@ -63,12 +91,24 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         body: _reminders.isEmpty
             ? Center(
-                child: Text(
-                  "No reminder Found",
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.teal,
-                  ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.notifications_off,
+                      color: Colors.teal,
+                      size: 50,
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "No reminders found.\nAdd one by clicking the + button.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.teal,
+                      ),
+                    ),
+                  ],
                 ),
               )
             : ListView.builder(
@@ -91,15 +131,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     confirmDismiss: (direction) async {
                       return await _showDeleteConfirmationDialog(context);
                     },
-                    onDismissed: (direction) {
-                      _deleteReminder(reminder['id']);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Reminder Delered',
+                    onDismissed: (direction) async {
+                      try {
+                        await _deleteReminder(reminder['id']);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Reminder Deleted'),
                           ),
-                        ),
-                      );
+                        );
+                      } catch (e) {
+                        print('Error deleting reminder: $e');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to delete reminder'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        _loadReminders();
+                      }
                     },
                     child: Card(
                       color: Colors.teal.shade50,
@@ -112,9 +161,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: ListTile(
-                        onTap: (){
-                          // Navigator.push(context, 
-                          // MaterialPageRoute(builder: (context)=> ReminderDetailScreen()));
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ReminderDetailScreen(
+                                reminderId: reminder['id'],
+                              ),
+                            ),
+                          );
                         },
                         leading: Icon(
                           Icons.notifications,
@@ -132,13 +187,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           'category: ${reminder['category']}',
                         ),
                         trailing: Switch(
-                            value: reminder['isActive'] == 1,
-                            activeColor: Colors.teal,
-                            inactiveTrackColor: Colors.white,
-                            inactiveThumbColor: Colors.black,
-                            onChanged: (value) {
-                              _toggleReminder(reminder['id'], value);
-                            },),
+                          value: reminder['isActive'] == 1,
+                          activeColor: Colors.teal,
+                          inactiveTrackColor: Colors.white,
+                          inactiveThumbColor: Colors.black,
+                          onChanged: (value) {
+                            _toggleReminder(reminder['id'], value);
+                          },
+                        ),
                       ),
                     ),
                   );
