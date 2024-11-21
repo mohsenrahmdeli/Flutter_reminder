@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-import '../database/db_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'add_edit_reminder.dart';
 
 class ReminderDetailScreen extends StatefulWidget {
@@ -13,10 +13,24 @@ class ReminderDetailScreen extends StatefulWidget {
 }
 
 class _ReminderDetailScreenState extends State<ReminderDetailScreen> {
+  Future<Map<String, dynamic>?> getReminderById(int reminderId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final remindersString = prefs.getString('reminders') ?? '[]';
+    final reminders =
+        List<Map<String, dynamic>>.from(jsonDecode(remindersString));
+    try {
+      return reminders.firstWhere(
+        (reminder) => reminder['id'] == reminderId,
+      );
+    } catch (e) {
+      return null; // اگر آیتمی پیدا نشود، مقدار null باز می‌گردد
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, dynamic>?>(
-      future: DbHelper.getReminderById(widget.reminderId),
+      future: getReminderById(widget.reminderId),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return Scaffold(
