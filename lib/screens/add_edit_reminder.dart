@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -304,13 +305,19 @@ class _AddEditReminderState extends State<AddEditReminder> {
 
   Future<void> _saveReminder() async {
     if (_formKey.currentState!.validate()) {
+      if (_reminderTime.isBefore(DateTime.now())) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please choose a future date and time')),
+        );
+        return;
+      }
+
       final prefs = await SharedPreferences.getInstance();
       final reminders = prefs.getString('reminders');
       List remindersList = reminders != null ? jsonDecode(reminders) : [];
 
       final newReminder = {
-        'id': widget.reminderId ??
-            (DateTime.now().millisecondsSinceEpoch % 2147483647),
+        'id': widget.reminderId ?? Random().nextInt(2147483647),
         'title': _titleController.text,
         'description': _descriptionController.text,
         'isActive': 1,
@@ -331,13 +338,13 @@ class _AddEditReminderState extends State<AddEditReminder> {
 
       await prefs.setString('reminders', jsonEncode(remindersList));
       NotificationHelper.scheduleNotificaton(
-        newReminder['id'] as int, // تبدیل به نوع int
+        newReminder['id'] as int,
         _titleController.text,
         _category,
         _reminderTime,
       );
 
-      Navigator.pushReplacement(
+      Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => HomeScreen(),
