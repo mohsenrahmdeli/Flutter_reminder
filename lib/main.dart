@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import '../database/db_helper.dart';
+import 'package:flutter/services.dart';
 import 'screens/home_screen.dart';
 import 'services/notification_helper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await DbHelper.initDb();
   await NotificationHelper.initializeNotifications();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
   runApp(const MyApp());
 }
 
