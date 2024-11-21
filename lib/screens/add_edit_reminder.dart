@@ -32,7 +32,7 @@ class _AddEditReminderState extends State<AddEditReminder> {
 
   Future<void> fetchReminder() async {
     try {
-      final data = await DbHelper.getRemindersBuId(widget.reminderId!);
+      final data = await DbHelper.getReminderById(widget.reminderId!);
       if (data != null) {
         _titleController.text = data['title'];
         _descriptionController.text = data['description'];
@@ -76,7 +76,7 @@ class _AddEditReminderState extends State<AddEditReminder> {
                       border: InputBorder.none,
                     ),
                     validator: (value) {
-                      value!.isEmpty ? 'Please enter a title' : null;
+                      return value!.isEmpty ? 'Please enter a title' : null;
                     },
                   ),
                 ),
@@ -94,7 +94,7 @@ class _AddEditReminderState extends State<AddEditReminder> {
                       border: InputBorder.none,
                     ),
                     validator: (value) {
-                      value!.isEmpty ? 'Please description' : null;
+                      return value!.isEmpty ? 'Please Description' : null;
                     },
                   ),
                 ),
@@ -117,11 +117,11 @@ class _AddEditReminderState extends State<AddEditReminder> {
                       },
                     ).toList(),
                     onChanged: (value) {
-                      setState(
-                        () {
-                          _category = value!;
-                        },
-                      );
+                      if (value != null) {
+                        setState(() {
+                          _category = value;
+                        });
+                      }
                     },
                   ),
                 ),
@@ -274,17 +274,20 @@ class _AddEditReminderState extends State<AddEditReminder> {
 
   Future<void> _selectTime() async {
     TimeOfDay? picked = await showTimePicker(
-        context: context,
-        initialTime:
-            TimeOfDay(hour: _reminderTime.hour, minute: _reminderTime.minute));
+      context: context,
+      initialTime: TimeOfDay(
+        hour: _reminderTime.hour,
+        minute: _reminderTime.minute,
+      ),
+    );
     if (picked != null) {
       setState(() {
         _reminderTime = DateTime(
           _reminderTime.year,
           _reminderTime.month,
           _reminderTime.day,
-          _reminderTime.hour,
-          _reminderTime.minute,
+          picked.hour,
+          picked.minute,
         );
       });
     }
