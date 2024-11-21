@@ -12,22 +12,42 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   List<Map<String, dynamic>> _reminders = [];
+  late AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
     requestNotificationPermissions();
     _loadReminders();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 1),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   Future<void> _loadReminders() async {
     try {
       final reminders = await SharedPreferencesHelper.getReminders();
+      final now = DateTime.now();
       setState(() {
-        _reminders = reminders ?? [];
+        _reminders = (reminders ?? []).map((reminder) {
+          final reminderTime = DateTime.parse(reminder['reminderTime']);
+          if (now.isAfter(reminderTime)) {
+            reminder['isActive'] = 0;
+          }
+          return reminder;
+        }).toList();
       });
+      await SharedPreferencesHelper.saveReminders(_reminders);
     } catch (e) {
       print('Error loading reminders: $e');
       setState(() {
@@ -89,6 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
+          automaticallyImplyLeading: false,
           title: Text(
             'Reminder',
             style: TextStyle(
@@ -129,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     key: Key(reminder['id'].toString()),
                     direction: DismissDirection.endToStart,
                     background: Container(
-                      color: Colors.redAccent,
+                      color: const Color.fromARGB(255, 255, 17, 1),
                       padding: EdgeInsets.only(right: 20),
                       alignment: Alignment.centerRight,
                       child: Icon(
@@ -181,9 +202,24 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           );
                         },
-                        leading: Icon(
-                          Icons.notifications,
-                          color: Colors.teal,
+                        leading: AnimatedBuilder(
+                          animation: _controller,
+                          builder: (context, child) {
+                            return Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: DateTime.now().isAfter(DateTime.parse(
+                                        reminder['reminderTime']))
+                                    ? ColorTween(
+                                            begin: Colors.red,
+                                            end: Colors.transparent)
+                                        .evaluate(_controller)
+                                    : Colors.green,
+                                shape: BoxShape.circle,
+                              ),
+                            );
+                          },
                         ),
                         title: Text(
                           reminder['title'],
@@ -197,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           'category: ${reminder['category']}',
                         ),
                         trailing: Switch(
-                          value: reminder['isActive'] == 1, // بررسی مقدار عددی
+                          value: reminder['isActive'] == 1,
                           activeColor: Colors.teal,
                           inactiveTrackColor: Colors.white,
                           inactiveThumbColor: Colors.black,
