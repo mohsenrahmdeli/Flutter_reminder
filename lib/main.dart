@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'screens/home_screen.dart';
+import 'screens/splash_Screen.dart';
 import 'services/notification_helper.dart';
 
 void main() async {
@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: HomeScreen(),
+      home: SplashScreen(),
     );
   }
 }
